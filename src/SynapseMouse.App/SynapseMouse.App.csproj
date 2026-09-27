@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- WinForms is only used for the system-tray NotifyIcon. -->
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <RootNamespace>SynapseMouse.App</RootNamespace>
+    <AssemblyName>SynapseMouseAdjustments</AssemblyName>
+    <StartupObject>SynapseMouse.App.Program</StartupObject>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <AssemblyTitle>Synapse Mouse Adjustments</AssemblyTitle>
+    <Description>Software-level mouse customization for Windows.</Description>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- 64-bit only: the input structures and hooks are validated for x64/ARM64. -->
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+    <PlatformTarget Condition="'$(RuntimeIdentifier)' == ''">x64</PlatformTarget>
+    <TieredPGO>true</TieredPGO>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- WFO0003: WPF reads per-monitor DPI awareness from app.manifest; WinForms is only used for the tray icon. -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SynapseMouse.Core\SynapseMouse.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+    <Resource Include="Assets\tray-on.ico" />
+    <Resource Include="Assets\tray-off.ico" />
+  </ItemGroup>
+
+</Project>

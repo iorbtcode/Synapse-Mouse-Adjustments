@@ -160,6 +160,7 @@ public sealed class ConfigManager
         fresh.MasterEnabled = config.MasterEnabled;
         ConfigSanitizer.Sanitize(fresh);
         Document.Configs[Document.Configs.IndexOf(config)] = fresh;
+        ConfigListChanged?.Invoke(this, EventArgs.Empty);
         if (Document.ActiveConfigId == id)
         {
             ActiveConfigChanged?.Invoke(this, EventArgs.Empty);

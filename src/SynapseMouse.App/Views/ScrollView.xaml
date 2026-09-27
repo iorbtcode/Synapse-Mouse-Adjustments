@@ -1,0 +1,79 @@
+<UserControl x:Class="SynapseMouse.App.Views.ScrollView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SynapseMouse.App.Controls"
+             x:ClassModifier="internal">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="36,8,36,36">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource Text.PageTitle}" />
+            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Text.PageSubtitle}" Margin="0,4,0,22" />
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Scroll speed"
+                                   Description="Windows' own scroll amount, applied only while this config is active.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding OverrideWindowsScroll}" ToolTip="Override Windows scroll settings" />
+                    </c:SettingItem>
+                    <StackPanel IsEnabled="{Binding OverrideWindowsScroll}">
+                        <c:SettingItem Title="Lines per notch" IsEnabled="{Binding PageScroll, Converter={StaticResource InverseBool}}">
+                            <c:NumericSlider Value="{Binding LinesPerNotch}" Minimum="1" Maximum="100" SliderMaximum="20" Step="1" Unit="lines" Width="340" />
+                        </c:SettingItem>
+                        <c:SettingItem Title="One screen per notch" Description="Scroll a full page with each notch instead of a number of lines.">
+                            <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding PageScroll}" />
+                        </c:SettingItem>
+                        <c:SettingItem Title="Horizontal scroll speed" Description="Characters per notch for horizontal scrolling.">
+                            <c:NumericSlider Value="{Binding HorizontalChars}" Minimum="1" Maximum="100" SliderMaximum="20" Step="1" Unit="chars" Width="340" />
+                        </c:SettingItem>
+                    </StackPanel>
+                    <TextBlock Text="{Binding WindowsScrollNote}" Style="{StaticResource Text.Caption}" FontWeight="Normal" FontSize="12" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Scroll processing"
+                                   Description="Software processing of each wheel movement. Leaving everything at default means wheel input isn't touched at all." />
+                    <c:SettingItem Title="Scroll sensitivity" Description="Multiplies how far each notch scrolls. Below 1× several notches add up to one step." BorderThickness="0">
+                        <c:NumericSlider Value="{Binding Sensitivity}" Minimum="0.1" Maximum="10" SliderMaximum="4" Step="0.05" Decimals="2" Unit="×" Width="340" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Smooth fractional scrolling" Description="Send partial notches for apps that support smooth scrolling (browsers, modern apps). Off = whole notches only, which every app understands.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding FineGrained}" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Reverse vertical scrolling" Description="Natural (touchpad-style) direction.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding ReverseVertical}" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Reverse horizontal scrolling">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding ReverseHorizontal}" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Horizontal scrolling" Description="Hold a key while turning the wheel to scroll sideways — gives mice without a tilt wheel horizontal scrolling.">
+                        <ComboBox Width="180" ItemsSource="{Binding ModifierOptions}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding HorizontalModifier}" />
+                    </c:SettingItem>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Scroll acceleration" Description="Fast, continuous scrolling travels further; slow notches stay precise.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding AccelerationEnabled}" ToolTip="Enable scroll acceleration" />
+                    </c:SettingItem>
+                    <StackPanel IsEnabled="{Binding AccelerationEnabled}">
+                        <c:SettingItem Title="Strength">
+                            <c:NumericSlider Value="{Binding AccelerationStrength}" Minimum="0" Maximum="100" Step="5" Unit="%" Width="340" />
+                        </c:SettingItem>
+                        <c:SettingItem Title="Maximum multiplier">
+                            <c:NumericSlider Value="{Binding AccelerationMax}" Minimum="1" Maximum="10" Step="0.5" Decimals="1" Unit="×" Width="340" />
+                        </c:SettingItem>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Scroll-button remapping"
+                                   Description="Turn wheel notches into other actions (also available on the Buttons page). A remapped direction ignores the processing above." />
+                    <ItemsControl ItemsSource="{Binding WheelRows}" ItemTemplate="{StaticResource MappingRowTemplate}" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

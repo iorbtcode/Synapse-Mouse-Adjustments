@@ -1,0 +1,95 @@
+<UserControl x:Class="SynapseMouse.App.Views.PollingView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SynapseMouse.App.Controls"
+             x:ClassModifier="internal">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="36,8,36,36">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource Text.PageTitle}" />
+            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Text.PageSubtitle}" Margin="0,4,0,22" />
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Hardware polling rate" Description="The rate at which the mouse itself sends reports." />
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,14">
+                        <Border Style="{StaticResource SegmentHost}" IsEnabled="False" ToolTip="Not supported by this mouse">
+                            <ItemsControl ItemsSource="{Binding HardwareRates}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <RadioButton Style="{StaticResource Segment}" GroupName="HardwareRate" Content="{Binding}" ContentStringFormat="{}{0} Hz" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
+                            <c:Icon Data="{StaticResource Icon.Lock}" Width="15" Height="15" Stroke="{StaticResource Brush.Note}" />
+                            <TextBlock Text="Not supported by this mouse" Style="{StaticResource Text.Label}" Foreground="{StaticResource Brush.Note}" Margin="7,0,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Border Style="{StaticResource Note}">
+                        <TextBlock Text="{Binding HardwareSupportText}" Style="{StaticResource Text.Note}" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Measured report rate"
+                                   Description="Counted from the mouse's real Raw Input reports while this page is open. Move the mouse quickly and continuously.">
+                        <Button Content="Reset peak" Command="{Binding ResetCommand}" />
+                    </c:SettingItem>
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Text="CURRENT" Style="{StaticResource Text.Caption}" />
+                            <TextBlock Text="{Binding CurrentRateText}" FontFamily="{StaticResource Font.Display}" FontSize="36" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Brush.Text}" Margin="0,2,0,0" />
+                            <TextBlock Text="{Binding MeasuringHint}" Style="{StaticResource Text.Body}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="PEAK" Style="{StaticResource Text.Caption}" />
+                            <TextBlock Text="{Binding PeakRateText}" FontFamily="{StaticResource Font.Display}" FontSize="36" FontWeight="SemiBold"
+                                       Foreground="{StaticResource Brush.Text}" Margin="0,2,0,0" />
+                            <TextBlock Text="{Binding MeasuredDevice}" Style="{StaticResource Text.Body}" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid Height="6" Margin="0,18,0,0">
+                        <Border CornerRadius="3" Background="{StaticResource Brush.Track}" />
+                        <Border CornerRadius="3" Background="{StaticResource Brush.Accent}" RenderTransformOrigin="0,0.5">
+                            <Border.RenderTransform>
+                                <ScaleTransform ScaleX="{Binding MeterFraction}" />
+                            </Border.RenderTransform>
+                        </Border>
+                    </Grid>
+                    <Grid Margin="0,4,0,0">
+                        <TextBlock Text="0" Style="{StaticResource Text.Caption}" FontWeight="Normal" />
+                        <TextBlock Text="1000 Hz" Style="{StaticResource Text.Caption}" FontWeight="Normal" HorizontalAlignment="Right" />
+                    </Grid>
+                    <TextBlock Text="{Binding NearestStandardText}" Style="{StaticResource Text.Label}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Synapse input processing"
+                                   Description="Software settings that control how quickly Synapse itself handles input. They do not change how often the mouse reports." />
+                    <c:SettingItem Title="Input thread priority" Description="Priority of Synapse's input threads. Highest keeps remapped and generated clicks responsive when the PC is busy (e.g. in games)." BorderThickness="0">
+                        <ComboBox Width="220" ItemsSource="{Binding PriorityOptions}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding ThreadPriority}" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Precise click timing" Description="Uses a high-resolution timer so generated clicks (Single → Double, delays, hold times) land within about half a millisecond. Only active while a click is scheduled.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding PreciseTiming}" />
+                    </c:SettingItem>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

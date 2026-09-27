@@ -1,0 +1,69 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="clr-namespace:SynapseMouse.App.Controls"
+                    xmlns:conv="clr-namespace:SynapseMouse.App.Converters"
+                    xmlns:vm="clr-namespace:SynapseMouse.App.ViewModels">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Controls.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <conv:BoolToVisibilityConverter x:Key="BoolToVisible" />
+    <conv:BoolToVisibilityConverter x:Key="BoolToCollapsed" Invert="True" />
+    <conv:InverseBoolConverter x:Key="InverseBool" />
+    <conv:NullToCollapsedConverter x:Key="NullToCollapsed" />
+    <conv:EnumToBoolConverter x:Key="EnumToBool" />
+    <conv:ZeroToVisibleConverter x:Key="ZeroToVisible" />
+
+    <!-- One remappable input: name, action, optional key, and what it currently does. -->
+    <DataTemplate x:Key="MappingRowTemplate" DataType="{x:Type vm:MappingRowViewModel}">
+        <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0" Padding="0,11">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SourceName}" Style="{StaticResource Text.Label}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Summary}" Style="{StaticResource Text.Caption}" FontWeight="Normal" Margin="0,2,0,0"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding Actions}" DisplayMemberPath="Label" SelectedValuePath="Value"
+                          SelectedValue="{Binding Action}" />
+                <c:KeyCaptureBox Grid.Column="2" Margin="12,0,0,0" HorizontalAlignment="Left" AllowModifierOnly="True"
+                                 Placeholder="Click, then press a key"
+                                 Chord="{Binding Key}" Visibility="{Binding IsKeyboard, Converter={StaticResource BoolToVisible}}" />
+            </Grid>
+        </Border>
+    </DataTemplate>
+
+    <!-- Card header: title + subtitle on the left, optional control (e.g. an enable toggle) on the right. -->
+    <Style x:Key="CardHeader" TargetType="c:SettingItem" BasedOn="{StaticResource {x:Type c:SettingItem}}">
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0,0,0,6" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="c:SettingItem">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,6">
+                            <TextBlock Text="{TemplateBinding Title}" Style="{StaticResource Text.CardTitle}" />
+                            <TextBlock x:Name="Desc" Text="{TemplateBinding Description}" Style="{StaticResource Text.CardSubtitle}" />
+                        </StackPanel>
+                        <ContentPresenter Grid.Column="1" VerticalAlignment="Top" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Description" Value="{x:Null}">
+                            <Setter TargetName="Desc" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

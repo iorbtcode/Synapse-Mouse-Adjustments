@@ -1,0 +1,131 @@
+<UserControl x:Class="SynapseMouse.App.Views.DpiView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:SynapseMouse.App.Controls"
+             xmlns:vm="clr-namespace:SynapseMouse.App.ViewModels"
+             x:ClassModifier="internal">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="36,8,36,36">
+            <TextBlock Text="{Binding Title}" Style="{StaticResource Text.PageTitle}" />
+            <TextBlock Text="{Binding Subtitle}" Style="{StaticResource Text.PageSubtitle}" Margin="0,4,0,22" />
+
+            <Border Style="{StaticResource Note}" Margin="0,0,0,16">
+                <TextBlock Style="{StaticResource Text.Note}">
+                    <Run Text="Hardware DPI is not adjustable on this mouse." FontWeight="SemiBold" />
+                    <Run Text="A generic mouse's sensor DPI is fixed in its firmware and Windows provides no way to change it. The stages below are software DPI: Synapse multiplies the movement the mouse reports. Enter your mouse's real DPI so the numbers line up." />
+                </TextBlock>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Software DPI stages"
+                                   Description="Switch stages with hotkeys, a mapped button, or by selecting one here.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding DpiStagesEnabled}" ToolTip="Enable software DPI stages" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Your mouse's hardware DPI" Description="From the box or manufacturer page; office mice are usually 800–1600. Used as the 1.00× reference.">
+                        <c:NumericSlider Value="{Binding NativeDpi}" Minimum="100" Maximum="32000" SliderMaximum="3200" Step="50" Unit="DPI" Width="340" />
+                    </c:SettingItem>
+
+                    <ItemsControl ItemsSource="{Binding Stages}" IsEnabled="{Binding DpiStagesEnabled}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:DpiStageViewModel}">
+                                <Border BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0" Padding="0,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="90" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <RadioButton GroupName="DpiStage" IsChecked="{Binding IsActive, Mode=OneWay}" Command="{Binding SelectCommand}"
+                                                     VerticalAlignment="Center" Cursor="Hand" ToolTip="Make this the active stage">
+                                            <RadioButton.Template>
+                                                <ControlTemplate TargetType="RadioButton">
+                                                    <Grid Width="20" Height="20" Background="Transparent">
+                                                        <Ellipse Stroke="{StaticResource Brush.BorderStrong}" StrokeThickness="1.5" Fill="{StaticResource Brush.Input}" />
+                                                        <Ellipse x:Name="Dot" Width="10" Height="10" Fill="{StaticResource Brush.Accent}" Visibility="Collapsed" />
+                                                    </Grid>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter TargetName="Dot" Property="Visibility" Value="Visible" />
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Opacity" Value="0.35" />
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </RadioButton.Template>
+                                        </RadioButton>
+                                        <TextBlock Grid.Column="1" Text="{Binding Label}" Style="{StaticResource Text.Label}" FontWeight="SemiBold"
+                                                   VerticalAlignment="Center" Margin="12,0,0,0" />
+                                        <c:NumericSlider Grid.Column="2" Value="{Binding Dpi}" Minimum="50" Maximum="32000" SliderMaximum="6400" Step="50" Unit="DPI"
+                                                         IsEnabled="{Binding Enabled}" Margin="0,0,20,0" />
+                                        <CheckBox Grid.Column="3" Style="{StaticResource Toggle}" IsChecked="{Binding Enabled}" ToolTip="Include this stage when switching" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <Border Style="{StaticResource InfoBox}" Margin="0,10,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding CurrentStageText}" Style="{StaticResource Text.Label}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding EffectiveDpiText}" Style="{StaticResource Text.Body}" Margin="0,3,0,0" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Sensitivity" Description="Software multipliers for each axis, combined with the active DPI stage." />
+                    <c:SettingItem Title="X sensitivity (horizontal)" BorderThickness="0">
+                        <c:NumericSlider Value="{Binding XSensitivity}" Minimum="0.05" Maximum="10" SliderMaximum="3" Step="0.05" Decimals="2" Unit="×" Width="340" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Link X and Y" Description="Use the X value for both axes.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding LinkXY}" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Y sensitivity (vertical)" IsEnabled="{Binding YEditable}">
+                        <c:NumericSlider Value="{Binding YSensitivity}" Minimum="0.05" Maximum="10" SliderMaximum="3" Step="0.05" Decimals="2" Unit="×" Width="340" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Clutch DPI" Description="Used while a button mapped to 'Sensitivity clutch (hold)' is held — see the Buttons page.">
+                        <c:NumericSlider Value="{Binding ClutchDpi}" Minimum="50" Maximum="32000" SliderMaximum="3200" Step="50" Unit="DPI" Width="340" />
+                    </c:SettingItem>
+                    <Border Style="{StaticResource InfoBox}" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding ScalingNote}" Style="{StaticResource Text.Body}" />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="Windows pointer"
+                                   Description="Real Windows settings, applied only while this config is active with Master Enable on. Your own settings return when Synapse is disabled or closed.">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding OverridePointer}" ToolTip="Override Windows pointer settings" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Windows pointer speed" Description="{Binding PointerSpeedText}" IsEnabled="{Binding OverridePointer}">
+                        <c:NumericSlider Value="{Binding PointerSpeed}" Minimum="1" Maximum="20" Step="1" Width="340" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Pointer acceleration (Enhance pointer precision)" Description="{Binding AccelerationNote}" IsEnabled="{Binding AccelerationEditable}">
+                        <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding EnhancePointerPrecision}" />
+                    </c:SettingItem>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <c:SettingItem Style="{StaticResource CardHeader}" Title="DPI switching hotkeys" Description="{Binding HotkeyStatus}" />
+                    <c:SettingItem Title="Next stage" BorderThickness="0">
+                        <c:KeyCaptureBox Chord="{Binding DpiUpHotkey}" Placeholder="Not set" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Previous stage">
+                        <c:KeyCaptureBox Chord="{Binding DpiDownHotkey}" Placeholder="Not set" />
+                    </c:SettingItem>
+                    <c:SettingItem Title="Cycle stages">
+                        <c:KeyCaptureBox Chord="{Binding DpiCycleHotkey}" Placeholder="Not set" />
+                    </c:SettingItem>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

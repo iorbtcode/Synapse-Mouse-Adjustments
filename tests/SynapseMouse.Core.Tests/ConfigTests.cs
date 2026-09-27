@@ -319,3 +319,19 @@ public class ConfigTests
         Assert.Equal(3.5, PointerMath.SpeedMultiplier(99));
     }
 }
+
+public class SafetyTests
+{
+    [Fact]
+    public void EmergencyChord_CannotBeUsedAsVirtualButtonOrHotkey()
+    {
+        var config = ConfigPresets.Create(ConfigPresets.Default);
+        config.Hotkey = InputSafety.EmergencyChord.Clone();
+        config.Buttons.VirtualButtons.Add(new VirtualButton { Trigger = InputSafety.EmergencyChord.Clone(), Action = ActionType.LeftClick });
+        Assert.Empty(ProcessorSettings.FromConfig(config, true).VirtualButtons);
+
+        ConfigSanitizer.Sanitize(config);
+        Assert.Null(config.Hotkey);
+        Assert.Null(config.Buttons.VirtualButtons[0].Trigger);
+    }
+}

@@ -127,7 +127,7 @@ public sealed class ProcessorSettings
         var virtualButtons = new List<VirtualButtonSpec>();
         foreach (var vb in config.Buttons.VirtualButtons)
         {
-            if (!vb.Enabled || vb.Trigger is null || !vb.Trigger.IsValidTrigger)
+            if (!vb.Enabled || vb.Trigger is null || !vb.Trigger.IsValidTrigger || InputSafety.IsReserved(vb.Trigger))
             {
                 continue;
             }

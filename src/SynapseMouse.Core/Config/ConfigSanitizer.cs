@@ -42,6 +42,10 @@ public static class ConfigSanitizer
         config.Name = CleanName(config.Name, "Config");
         config.Preset = ConfigPresets.All.Contains(config.Preset ?? string.Empty) ? config.Preset! : ConfigPresets.Custom;
         config.Hotkey = CleanTrigger(config.Hotkey);
+        if (InputSafety.IsReserved(config.Hotkey))
+        {
+            config.Hotkey = null;
+        }
 
         config.Buttons ??= new ButtonSettings();
         SanitizeButtons(config.Buttons);
@@ -248,6 +252,10 @@ public static class ConfigSanitizer
 
             vb.Name = CleanName(vb.Name, "Virtual button");
             vb.Trigger = CleanTrigger(vb.Trigger);
+            if (InputSafety.IsReserved(vb.Trigger))
+            {
+                vb.Trigger = null;
+            }
             if (!Enum.IsDefined(vb.Action) || vb.Action is ActionType.Default or ActionType.Disabled)
             {
                 vb.Action = ActionType.BackButton;
