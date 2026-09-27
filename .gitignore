@@ -10,3 +10,5 @@ artifacts/
 .idea/
 *.swp
 TestResults/
+__pycache__/
+*.pyc
