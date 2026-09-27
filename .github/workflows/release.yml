@@ -1,11 +1,22 @@
 name: Release
 
-# Push a tag like v1.0.0 to build, verify and publish a GitHub Release.
-# Run manually (workflow_dispatch) for a dry run that only uploads the files as an artifact.
+# Publish a release either way:
+#   * Actions → Release → Run workflow, and enter a version such as 1.0.0 (creates the tag and the release), or
+#   * push a tag such as v1.0.0.
+# Running it with the version left empty is a dry run that only uploads the files as an artifact.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, e.g. 1.0.0 (leave empty for a dry run)"
+        required: false
+        default: ""
+
+concurrency:
+  group: release-${{ github.ref }}-${{ inputs.version }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -23,15 +34,24 @@ jobs:
       - name: Determine version
         id: version
         shell: pwsh
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
+          $publish = "false"
           if ($env:GITHUB_REF_TYPE -eq "tag") {
             $version = $env:GITHUB_REF_NAME.TrimStart("v")
+            $publish = "true"
+          } elseif ("$env:INPUT_VERSION".Trim() -ne "") {
+            $version = "$env:INPUT_VERSION".Trim().TrimStart("v")
+            $publish = "true"
           } else {
             $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
           }
           if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Version '$version' must look like 1.2.3" }
           "version=$version" >> $env:GITHUB_OUTPUT
-          Write-Host "Version: $version"
+          "tag=v$version" >> $env:GITHUB_OUTPUT
+          "publish=$publish" >> $env:GITHUB_OUTPUT
+          Write-Host "Version: $version  Publish: $publish"
 
       - name: Test core library
         run: dotnet test tests/SynapseMouse.Core.Tests/SynapseMouse.Core.Tests.csproj -c Release
@@ -85,17 +105,24 @@ jobs:
           path: release
 
       - name: Publish GitHub Release
-        if: github.ref_type == 'tag'
+        if: steps.version.outputs.publish == 'true'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          $tag = $env:GITHUB_REF_NAME
+          $tag = "${{ steps.version.outputs.tag }}"
           $notes = ".github/releases/$tag.md"
-          $files = Get-ChildItem release -File | ForEach-Object { $_.FullName }
-          if (Test-Path $notes) {
-            gh release create $tag @files --title "Synapse Mouse Adjustments $tag" --notes-file $notes --verify-tag
+          $files = @(Get-ChildItem release -File | ForEach-Object { $_.FullName })
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -eq 0) {
+            # The release already exists (e.g. created in the GitHub UI): attach/refresh the files.
+            gh release upload $tag @files --clobber
           } else {
-            gh release create $tag @files --title "Synapse Mouse Adjustments $tag" --generate-notes --verify-tag
+            # Creates the tag on the commit that was built, then the release.
+            $ghArgs = @($tag) + $files + @("--title", "Synapse Mouse Adjustments $tag", "--target", $env:GITHUB_SHA)
+            if (Test-Path $notes) { $ghArgs += @("--notes-file", $notes) } else { $ghArgs += "--generate-notes" }
+            gh release create @ghArgs
           }
-          if ($LASTEXITCODE -ne 0) { throw "Creating the release failed" }
+          if ($LASTEXITCODE -ne 0) { throw "Publishing the release failed" }
+          gh release view $tag --json url --jq .url

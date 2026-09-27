@@ -71,7 +71,7 @@ You can also open `SynapseMouseAdjustments.sln` in Visual Studio 2026 (or any ID
 
 Every push also builds on GitHub Actions (`.github/workflows/build.yml`). The workflow runs the unit tests, publishes the exe, runs a runtime smoke test (`--self-test`: the real app starts on the Windows runner, opens every page, switches configs, toggles Master Enable and checks that the input hook is installed and removed), and uploads the exe as a build artifact.
 
-To publish a release, push a tag such as `v1.0.1`. `.github/workflows/release.yml` then builds the x64 and ARM64 exes and the installer, runs the tests and the runtime smoke test, and creates the GitHub Release with checksums and the notes from `.github/releases/<tag>.md`.
+To publish a release, open **Actions → Release → Run workflow** and enter a version such as `1.0.1`, or push a tag such as `v1.0.1`. `.github/workflows/release.yml` then builds the x64 and ARM64 exes and the installer, runs the tests and the runtime smoke test, and creates the GitHub Release with checksums and the notes from `.github/releases/<tag>.md`.
 
 **Dependencies:** only the .NET 10 base libraries (WPF, plus WinForms for the tray icon). The test project uses xUnit. There are no third-party runtime packages.
 
