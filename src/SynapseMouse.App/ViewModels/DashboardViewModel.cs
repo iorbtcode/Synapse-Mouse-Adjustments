@@ -126,14 +126,15 @@ internal sealed class DashboardViewModel : ConfigPageViewModel
 
     // ------------------------------------------------------------------ quick controls
 
-    public Guid SelectedConfigId
+    // Nullable: while the option list is rebuilt the ComboBox briefly reports "no selection".
+    public Guid? SelectedConfigId
     {
         get => Config.Id;
         set
         {
-            if (value != Guid.Empty && value != Config.Id)
+            if (value is { } id && id != Guid.Empty && id != Config.Id)
             {
-                Controller.SwitchConfig(value, SwitchReason.Manual);
+                Controller.SwitchConfig(id, SwitchReason.Manual);
             }
         }
     }

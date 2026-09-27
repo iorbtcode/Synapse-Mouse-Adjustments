@@ -67,8 +67,17 @@ internal partial class App
             Check(controller.ActiveConfig.Id == config.Id, $"Switched to '{config.Name}'");
         }
 
+        // Create and delete a config while the Configs and Dashboard pages are live.
+        main.Navigate("configs");
+        await Settle();
+        var created = controller.Configs.Create("Self-test config", Core.Config.ConfigPresets.MinecraftPvp);
+        controller.SwitchConfig(created.Id, SwitchReason.Manual);
+        await Settle();
         main.Navigate("dashboard");
         await Settle();
+        Check(controller.Configs.Delete(created.Id), "Created and deleted a config");
+        await Settle();
+        Check(controller.Configs.Find(controller.ActiveConfig.Id) is not null, "Active config valid after delete");
 
         // Exercise features through the view models, exactly like the UI does.
         var dashboard = main.Dashboard;

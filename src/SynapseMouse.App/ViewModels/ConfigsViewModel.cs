@@ -95,17 +95,18 @@ internal sealed class AssociationViewModel : ViewModelBase
         }
     }
 
-    public Guid ConfigId
+    // Nullable: while the option list is rebuilt the ComboBox briefly reports "no selection".
+    public Guid? ConfigId
     {
         get => Model.ConfigId;
         set
         {
-            if (value == Guid.Empty)
+            if (value is not { } id || id == Guid.Empty)
             {
                 return;
             }
 
-            Model.ConfigId = value;
+            Model.ConfigId = id;
             _owner.CommitAssociations();
             OnPropertyChanged();
         }

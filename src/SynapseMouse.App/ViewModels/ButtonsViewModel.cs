@@ -131,8 +131,8 @@ internal sealed class MappingRowViewModel : ViewModelBase
         {
             bool keep = DialogService.ConfirmWithTimeout(
                 "Keep the new left-button mapping?",
-                "The left button no longer produces a left click. If you can't click, press Enter to keep the change, " +
-                $"or wait and it will be undone. {AppInfo.EmergencyHotkeyText} always turns Master Enable off.",
+                "The left button no longer produces a left click. Press Enter (or click Keep change) to keep it — if you do nothing, " +
+                $"it is undone automatically. {AppInfo.EmergencyHotkeyText} always turns Master Enable off.",
                 15);
             if (!keep)
             {
