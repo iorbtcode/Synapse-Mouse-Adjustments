@@ -60,7 +60,7 @@ dotnet test                              # unit tests (these run on any OS)
 
 You can also open `SynapseMouseAdjustments.sln` in Visual Studio 2026 (or any IDE with .NET 10 support, such as JetBrains Rider) and run the `SynapseMouse.App` project.
 
-Every push also builds on GitHub Actions (`.github/workflows/build.yml`), which uploads the exe as a build artifact.
+Every push also builds on GitHub Actions (`.github/workflows/build.yml`). The workflow runs the unit tests, publishes the exe, runs a runtime smoke test (`--self-test`: the real app starts on the Windows runner, opens every page, switches configs, toggles Master Enable and checks that the input hook is installed and removed), and uploads the exe as a build artifact.
 
 **Dependencies:** only the .NET 10 base libraries (WPF, plus WinForms for the tray icon). The test project uses xUnit. There are no third-party runtime packages.
 
@@ -172,6 +172,7 @@ Synapse's own injected events carry a marker in `dwExtraInfo` so its hooks skip 
 | `--startup` | Used by *Start with Windows*: starts hidden in the tray |
 | `--restore-windows-settings` | Re-applies your own Windows mouse settings, then exits |
 | `--uninstall` | Restores settings and removes the startup entry, then exits |
+| `--self-test <report.txt>` | Launches the full UI with temporary settings, visits every page and exercises the engine; exits 0 on success (used by CI) |
 
 ## Known limitations
 

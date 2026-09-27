@@ -24,6 +24,16 @@ jobs:
           --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
           -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish/win-x64
 
+      - name: Runtime smoke test (launch the app, visit every page, toggle features)
+        shell: pwsh
+        run: |
+          $report = Join-Path $env:RUNNER_TEMP "synapse-self-test.txt"
+          $p = Start-Process -FilePath "publish/win-x64/SynapseMouseAdjustments.exe" -ArgumentList "--self-test", $report -PassThru
+          $null = $p.Handle
+          if (-not $p.WaitForExit(180000)) { $p.Kill(); throw "Self-test timed out" }
+          if (Test-Path $report) { Get-Content $report } else { Write-Host "No report written." }
+          if ($p.ExitCode -ne 0) { throw "Self-test failed (exit code $($p.ExitCode))" }
+
       - uses: actions/upload-artifact@v4
         with:
           name: SynapseMouseAdjustments-win-x64

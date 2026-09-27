@@ -83,7 +83,7 @@ internal sealed class AppController : IDisposable
         // Tray menu handlers are deferred so the menu has closed before windows open or the tray is disposed.
         Tray.OpenRequested += () => _dispatcher.BeginInvoke(() => ShowWindowRequested?.Invoke(null));
         Tray.SettingsRequested += () => _dispatcher.BeginInvoke(() => ShowWindowRequested?.Invoke("settings"));
-        Tray.ExitRequested += () => _dispatcher.BeginInvoke(Exit);
+        Tray.ExitRequested += () => _dispatcher.BeginInvoke(() => Exit());
         Tray.MasterToggleRequested += () => _dispatcher.BeginInvoke(() => SetMaster(!MasterEnabled));
         Tray.ConfigSelected += id => _dispatcher.BeginInvoke(() => SwitchConfig(id, SwitchReason.Tray));
 
@@ -230,7 +230,9 @@ internal sealed class AppController : IDisposable
     }
 
     /// <summary>Fully stops the app: releases input, restores Windows settings, saves, exits.</summary>
-    public void Exit()
+    public void Exit() => Exit(0);
+
+    public void Exit(int exitCode)
     {
         if (_exiting)
         {
@@ -245,7 +247,7 @@ internal sealed class AppController : IDisposable
         WindowsSettings.RestoreNow();
         Dispose();
         Watchdog.SignalCleanExit();
-        System.Windows.Application.Current?.Shutdown();
+        System.Windows.Application.Current?.Shutdown(exitCode);
     }
 
     /// <summary>Best-effort cleanup when the process is about to die unexpectedly.</summary>

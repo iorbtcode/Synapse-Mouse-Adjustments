@@ -8,6 +8,8 @@ namespace SynapseMouse.App;
 ///   --watchdog &lt;pid&gt; &lt;token&gt;   crash guard (see <see cref="Watchdog"/>)
 ///   --restore-windows-settings  re-applies the user's own Windows mouse settings and exits
 ///   --uninstall                 restores settings and removes the startup entry (for uninstallers)
+///   --self-test &lt;file&gt;          launches the full UI with temporary settings, visits every page,
+///                               writes a report and exits with 0 (pass) or 1 (fail) — used by CI
 /// Otherwise enforces a single instance and runs the WPF application.
 /// </summary>
 internal static class Program
@@ -38,6 +40,16 @@ internal static class Program
             return 0;
         }
 
+        int selfTest = Array.IndexOf(args, "--self-test");
+        string? selfTestOutput = null;
+        if (selfTest >= 0)
+        {
+            selfTestOutput = selfTest + 1 < args.Length ? args[selfTest + 1] : "synapse-self-test.txt";
+            StoragePaths.OverrideDirectory = Path.Combine(Path.GetTempPath(), "SynapseSelfTest-" + Guid.NewGuid().ToString("N"));
+            Watchdog.Suppressed = true;
+            DialogService.Headless = true;
+        }
+
         Log.Initialize(StoragePaths.LogDirectory);
         using var instance = SingleInstance.TryAcquire();
         if (instance is null)
@@ -47,7 +59,11 @@ internal static class Program
             return 0;
         }
 
-        var app = new App { StartedFromStartup = args.Contains(StartupService.StartupArgument) };
+        var app = new App
+        {
+            StartedFromStartup = args.Contains(StartupService.StartupArgument),
+            SelfTestOutput = selfTestOutput,
+        };
         app.InitializeComponent();
         instance.ListenForShowRequests(() => app.Dispatcher.BeginInvoke(() => app.ShowMainWindow(null)));
         return app.Run();

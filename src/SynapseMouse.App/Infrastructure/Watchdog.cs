@@ -19,9 +19,17 @@ internal static class Watchdog
     private static EventWaitHandle? _cleanExitEvent;
     private static Process? _process;
 
+    /// <summary>Set by --self-test: no helper process is started.</summary>
+    public static bool Suppressed { get; set; }
+
     /// <summary>Called by the main app at startup.</summary>
     public static void Launch()
     {
+        if (Suppressed)
+        {
+            return;
+        }
+
         try
         {
             Stop();

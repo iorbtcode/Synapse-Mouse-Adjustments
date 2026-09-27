@@ -10,6 +10,9 @@ namespace SynapseMouse.App.Infrastructure;
 /// </summary>
 internal static class StoragePaths
 {
+    /// <summary>Forces a data directory (used by --self-test so it never touches real settings).</summary>
+    public static string? OverrideDirectory { get; set; }
+
     public static string DefaultDirectory =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppInfo.ShortName);
 
@@ -17,10 +20,16 @@ internal static class StoragePaths
 
     public static bool IsPortable => File.Exists(Path.Combine(AppContext.BaseDirectory, "portable.txt"));
 
-    public static string LogDirectory => Path.Combine(DefaultDirectory, "logs");
+    public static string LogDirectory => Path.Combine(OverrideDirectory ?? DefaultDirectory, "logs");
 
     public static string ResolveDataDirectory()
     {
+        if (OverrideDirectory is not null)
+        {
+            Directory.CreateDirectory(OverrideDirectory);
+            return OverrideDirectory;
+        }
+
         if (IsPortable)
         {
             return Path.Combine(AppContext.BaseDirectory, "Data");

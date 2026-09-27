@@ -10,14 +10,40 @@ internal static class DialogService
     private static Window? Owner =>
         Application.Current?.Windows.OfType<SynapseMouse.App.Views.MainWindow>().FirstOrDefault(w => w.IsVisible);
 
-    public static void Info(string title, string message) =>
-        SynapseDialog.Create(Owner, title, message, "OK", null, false).ShowDialog();
+    /// <summary>Set by --self-test: dialogs are logged instead of shown (nothing may block).</summary>
+    public static bool Headless { get; set; }
 
-    public static bool Confirm(string title, string message, string confirmText = "OK", bool danger = false) =>
-        SynapseDialog.Create(Owner, title, message, confirmText, "Cancel", danger).ShowDialog() == true;
+    public static List<string> HeadlessLog { get; } = new();
+
+    public static void Info(string title, string message)
+    {
+        if (Headless)
+        {
+            HeadlessLog.Add($"Dialog: {title} — {message}");
+            return;
+        }
+
+        SynapseDialog.Create(Owner, title, message, "OK", null, false).ShowDialog();
+    }
+
+    public static bool Confirm(string title, string message, string confirmText = "OK", bool danger = false)
+    {
+        if (Headless)
+        {
+            HeadlessLog.Add($"Confirm (declined): {title}");
+            return false;
+        }
+
+        return SynapseDialog.Create(Owner, title, message, confirmText, "Cancel", danger).ShowDialog() == true;
+    }
 
     public static string? Prompt(string title, string message, string initial, string confirmText = "Save")
     {
+        if (Headless)
+        {
+            return null;
+        }
+
         var dialog = SynapseDialog.Create(Owner, title, message, confirmText, "Cancel", false);
         dialog.ShowInput(initial);
         return dialog.ShowDialog() == true ? dialog.InputText : null;
@@ -26,6 +52,12 @@ internal static class DialogService
     /// <summary>Asks to keep a risky change; returns false (revert) if not confirmed in time.</summary>
     public static bool ConfirmWithTimeout(string title, string message, int seconds)
     {
+        if (Headless)
+        {
+            HeadlessLog.Add($"Timed confirm (reverted): {title}");
+            return false;
+        }
+
         var dialog = SynapseDialog.Create(Owner, title, message, "Keep change", "Revert", false);
         dialog.StartCountdown(seconds, "Reverting automatically in {0} s — press Enter to keep.");
         return dialog.ShowDialog() == true;

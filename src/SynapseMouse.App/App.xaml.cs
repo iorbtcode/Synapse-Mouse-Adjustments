@@ -16,6 +16,9 @@ internal partial class App : Application
     /// <summary>Launched by Windows at sign-in (--startup): start hidden in the tray.</summary>
     public bool StartedFromStartup { get; init; }
 
+    /// <summary>Report file for --self-test (null in normal use).</summary>
+    public string? SelfTestOutput { get; init; }
+
     public void ShowMainWindow(string? page)
     {
         if (_controller is null || _mainViewModel is null)
@@ -70,6 +73,12 @@ internal partial class App : Application
             return;
         }
 
+        if (SelfTestOutput is not null)
+        {
+            StartSelfTest();
+            return;
+        }
+
         bool startHidden = StartedFromStartup || _controller.App.StartMinimized;
         if (!startHidden)
         {
@@ -100,6 +109,12 @@ internal partial class App : Application
     {
         Log.Error("Unhandled UI exception.", e.Exception);
         e.Handled = true;
+        if (SelfTestOutput is not null)
+        {
+            _selfTestFailures.Add("Unhandled UI exception: " + e.Exception);
+            return;
+        }
+
         try
         {
             DialogService.Info("Something went wrong", "Synapse hit an unexpected error but is still running.\n\n" + e.Exception.Message);
