@@ -33,6 +33,15 @@ Starter configs: **Default** (no changes), **Gaming**, **Minecraft PvP**, **Swor
 
 ---
 
+## Download
+
+Get the latest version from the [Releases page](../../releases/latest):
+
+- **`…-Setup-x64.exe`**: per-user installer. Recommended.
+- **`…-win-x64-portable.exe`** / **`…-win-arm64-portable.exe`**: a single portable file.
+
+The files aren't code-signed, so SmartScreen may warn you the first time. Choose *More info → Run anyway*, or check the file against `SHA256SUMS.txt` first.
+
 ## Requirements
 
 - Windows 10 (1803 or later) or Windows 11, x64 or ARM64.
@@ -62,10 +71,13 @@ You can also open `SynapseMouseAdjustments.sln` in Visual Studio 2026 (or any ID
 
 Every push also builds on GitHub Actions (`.github/workflows/build.yml`). The workflow runs the unit tests, publishes the exe, runs a runtime smoke test (`--self-test`: the real app starts on the Windows runner, opens every page, switches configs, toggles Master Enable and checks that the input hook is installed and removed), and uploads the exe as a build artifact.
 
+To publish a release, push a tag such as `v1.0.1`. `.github/workflows/release.yml` then builds the x64 and ARM64 exes and the installer, runs the tests and the runtime smoke test, and creates the GitHub Release with checksums and the notes from `.github/releases/<tag>.md`.
+
 **Dependencies:** only the .NET 10 base libraries (WPF, plus WinForms for the tray icon). The test project uses xUnit. There are no third-party runtime packages.
 
 ## Install
 
+- **From a release:** run the setup exe, or place the portable exe anywhere and run it.
 - **Portable (simplest):** copy `SynapseMouseAdjustments.exe` anywhere, for example `%LOCALAPPDATA%\Programs\SynapseMouseAdjustments\`, and run it. If you add an empty `portable.txt` next to the exe, settings are stored next to it too.
 - **Installer (optional):** after `.\build.ps1`, compile `installer\SynapseMouseAdjustments.iss` with [Inno Setup 6](https://jrsoftware.org/isinfo.php). This produces a per-user installer that needs no admin rights. The uninstaller restores your Windows mouse settings and removes the startup entry.
 

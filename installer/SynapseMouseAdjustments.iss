@@ -5,7 +5,10 @@
 ; user's Windows mouse settings and removes the "Start with Windows" entry.
 
 #define AppName "Synapse Mouse Adjustments"
-#define AppVersion "1.0.0"
+; The release workflow passes the version with /DAppVersion=x.y.z
+#ifndef AppVersion
+  #define AppVersion "1.0.0"
+#endif
 #define AppExe "SynapseMouseAdjustments.exe"
 
 [Setup]
@@ -18,7 +21,7 @@ DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\publish
-OutputBaseFilename=SynapseMouseAdjustments-Setup
+OutputBaseFilename=SynapseMouseAdjustments-{#AppVersion}-Setup-x64
 SetupIconFile=..\src\SynapseMouse.App\Assets\app.ico
 UninstallDisplayIcon={app}\{#AppExe}
 Compression=lzma2

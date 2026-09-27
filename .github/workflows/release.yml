@@ -1,0 +1,101 @@
+name: Release
+
+# Push a tag like v1.0.0 to build, verify and publish a GitHub Release.
+# Run manually (workflow_dispatch) for a dry run that only uploads the files as an artifact.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq "tag") {
+            $version = $env:GITHUB_REF_NAME.TrimStart("v")
+          } else {
+            $version = ([xml](Get-Content Directory.Build.props)).Project.PropertyGroup.Version
+          }
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Version '$version' must look like 1.2.3" }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Version: $version"
+
+      - name: Test core library
+        run: dotnet test tests/SynapseMouse.Core.Tests/SynapseMouse.Core.Tests.csproj -c Release
+
+      - name: Publish win-x64 and win-arm64
+        shell: pwsh
+        run: |
+          foreach ($rid in "win-x64", "win-arm64") {
+            dotnet publish src/SynapseMouse.App/SynapseMouse.App.csproj -c Release -r $rid `
+              --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true `
+              -p:EnableCompressionInSingleFile=true -p:DebugType=none `
+              -p:Version=${{ steps.version.outputs.version }} -o "publish/$rid"
+            if ($LASTEXITCODE -ne 0) { throw "Publish failed for $rid" }
+          }
+
+      - name: Runtime smoke test (x64)
+        shell: pwsh
+        run: |
+          $report = Join-Path $env:RUNNER_TEMP "synapse-self-test.txt"
+          $p = Start-Process -FilePath "publish/win-x64/SynapseMouseAdjustments.exe" -ArgumentList "--self-test", $report -PassThru
+          $null = $p.Handle
+          if (-not $p.WaitForExit(180000)) { $p.Kill(); throw "Self-test timed out" }
+          if (Test-Path $report) { Get-Content $report } else { Write-Host "No report written." }
+          if ($p.ExitCode -ne 0) { throw "Self-test failed (exit code $($p.ExitCode))" }
+
+      - name: Build installer (Inno Setup)
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" installer\SynapseMouseAdjustments.iss
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
+
+      - name: Collect release files
+        shell: pwsh
+        run: |
+          $v = "${{ steps.version.outputs.version }}"
+          New-Item -ItemType Directory -Force release | Out-Null
+          Copy-Item publish/win-x64/SynapseMouseAdjustments.exe "release/SynapseMouseAdjustments-$v-win-x64-portable.exe"
+          Copy-Item publish/win-arm64/SynapseMouseAdjustments.exe "release/SynapseMouseAdjustments-$v-win-arm64-portable.exe"
+          Copy-Item "publish/SynapseMouseAdjustments-$v-Setup-x64.exe" "release/"
+          Get-ChildItem release -File | Get-FileHash -Algorithm SHA256 |
+            ForEach-Object { "{0}  {1}" -f $_.Hash.ToLower(), (Split-Path $_.Path -Leaf) } |
+            Set-Content -Encoding ascii release/SHA256SUMS.txt
+          Get-ChildItem release | Format-Table Name, Length
+          Get-Content release/SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: SynapseMouseAdjustments-${{ steps.version.outputs.version }}
+          path: release
+
+      - name: Publish GitHub Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:GITHUB_REF_NAME
+          $notes = ".github/releases/$tag.md"
+          $files = Get-ChildItem release -File | ForEach-Object { $_.FullName }
+          if (Test-Path $notes) {
+            gh release create $tag @files --title "Synapse Mouse Adjustments $tag" --notes-file $notes --verify-tag
+          } else {
+            gh release create $tag @files --title "Synapse Mouse Adjustments $tag" --generate-notes --verify-tag
+          }
+          if ($LASTEXITCODE -ne 0) { throw "Creating the release failed" }
