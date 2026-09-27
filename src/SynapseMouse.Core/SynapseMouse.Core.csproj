@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Platform-independent logic: models, config system, persistence and the input-processing
+       pipeline. Contains no Win32 calls so it can be unit tested on any OS. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SynapseMouse.Core</RootNamespace>
+    <AssemblyName>SynapseMouse.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="SynapseMouse.Core.Tests" />
+  </ItemGroup>
+
+</Project>
